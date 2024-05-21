@@ -22,3 +22,7 @@ Colors:
 --sunglow: #fdca40ff;
 --ghost-white: #f4f4f9ff;
 ```
+
+- Dokumente verwenden Controller
+- Controller können unterschiedliche Logik und Templates verwenden
+- Templates sind unter template/[controller]/[]
