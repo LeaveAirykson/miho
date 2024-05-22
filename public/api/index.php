@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../bootstrap/boot.php';
 $app = new App\Core\App();
 
 
-$app->route('GET', '/', 'AuthController::testuser');
+// $app->route('GET', '/', 'AuthController::testuser');
 
 // $app->route('POST', '/login', 'AuthController::login');
 
