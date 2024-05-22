@@ -1,3 +1,5 @@
 /public/
 !/public/api
 /log/*.log
+/storage/asset
+/storage/data
