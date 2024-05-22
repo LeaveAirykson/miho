@@ -1,0 +1,20 @@
+# makes sure page refresh redirects to index.html file
+RewriteEngine On
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f [OR]
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -d
+RewriteRule ^ - [L]
+RewriteRule ^ /admin/index.html
+
+# disable html caching
+<IfModule mod_headers.c>
+  <FilesMatch "(\.html$|ngsw\.json$)">
+    FileETag None
+    Header unset ETag
+    Header unset Pragma
+    Header unset Cache-Control
+    Header unset Last-Modified
+    Header set Pragma "no-cache"
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Expires "Thu, 1 Jan 1970 00:00:00 GMT"
+  </FilesMatch>
+</IfModule>
