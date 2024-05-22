@@ -1,0 +1,134 @@
+#!/bin/env php
+<?php
+require_once __DIR__ . '/config/constants.php';
+require_once __DIR__ . '/bootstrap/functions.php';
+
+
+$command = $argv[1] ?? null;
+$arguments = array_splice($argv, 2) ?? [];
+
+function showHelp()
+{
+    echo "\nMiho cli\n";
+}
+
+function parseArgs($arguments = [])
+{
+    $args = [];
+
+    foreach ($arguments as $arg) {
+        $split = explode('=', trim($arg));
+        $key = $split[0];
+        $val = $split[1] ?? true;
+
+        // convert boolean
+        if ($val === 'true') {
+            $val = true;
+        }
+        if ($val === 'false') {
+            $val = false;
+        }
+
+        $args[$key] = $val;
+    }
+
+    return $args;
+}
+
+function _create($entity = null, $name = null, $args = [])
+{
+    $args = parseArgs($args);
+    $fn = 'create_' . strtolower($entity);
+
+    if (!$entity) {
+        throw new Error("No entity passed to create command!");
+    }
+
+    if (!function_exists($fn)) {
+        throw new Error('Unknown entity ' . $entity . " passed to create!");
+    }
+
+    call_user_func($fn, $name, $args);
+}
+
+function create_model($name, $args = [])
+{
+    if (!$name) {
+        throw new Error("Name is missing!");
+    }
+
+    $name = str_replace(['_', '-', ' '], '', ucwords($name));
+    $content = file_get_contents(BOOTSTRAP_PATH . '/prototype/Model.php');
+    $file = MODEL_PATH . "/$name.php";
+
+    if (file_exists($file)) {
+        throw new Error("A model named \"$name\" already exists!");
+    }
+
+    $content = str_replace('MODELNAME', $name, $content);
+    file_put_contents($file, $content);
+
+    echo "Created: $file\n";
+}
+
+function create_config($name = null, $args = [])
+{
+    $file = CONFIG_PATH . "/config.local.php";
+
+    if (file_exists($file)) {
+        throw new Error("A local config file already exists!");
+    }
+
+    $config = [
+        'dev' => null,
+        'debug' => null,
+        'secret' => strtoupper(generateRandomString(23)),
+        'domain' => null
+    ];
+
+    while (!$config['dev']) {
+        $config['dev'] = readline("Is dev environment (y/n)? ");
+    }
+
+    while (!$config['debug']) {
+        $config['debug'] = readline("Activate debug (y/n)? ");
+    }
+
+    $config['dev'] = trim(strtolower($config['dev'])) == 'y' ? true : false;
+    $config['debug'] = trim(strtolower($config['debug'])) == 'y' ? true : false;
+
+    while (!$config['domain']) {
+        $config['domain'] = trim(readline("Domain name: "));
+    }
+
+    file_put_contents($file, "<?php\n\nreturn " . var_export($config, true) . ";");
+}
+
+try {
+    switch ($command) {
+        case 'init':
+            $paths = [DATA_PATH, ASSETS_PATH, LOG_PATH];
+
+            array_map(function ($path) {
+                if (!file_exists($path)) {
+                    mkdir($path, 0770, true);
+                    echo "created path: $path\n";
+                }
+            }, $paths);
+            break;
+
+
+        case 'create':
+            $entity = $arguments[0] ?? null;
+            $name = $arguments[1] ?? null;
+            $args = array_splice($arguments, 2) ?? [];
+            _create($entity, $name, $args);
+            break;
+
+        default:
+            showHelp();
+            break;
+    }
+} catch (\Throwable $th) {
+    echo "Error: " . $th->getMessage() . "\n";
+}
