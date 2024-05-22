@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Utility;
+namespace App\Core\Request;
 
 use RuntimeException;
 use Throwable;

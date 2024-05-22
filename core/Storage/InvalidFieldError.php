@@ -2,7 +2,7 @@
 
 namespace App\Core\Storage;
 
-use App\Core\Utility\HttpException;
+use App\Core\Request\HttpException;
 
 class InvalidFieldError extends HttpException
 {

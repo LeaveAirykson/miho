@@ -2,7 +2,7 @@
 
 namespace App\Core\Route;
 
-use App\Core\Utility\HttpException;
+use App\Core\Request\HttpException;
 
 class RouteNotFoundError extends HttpException
 {

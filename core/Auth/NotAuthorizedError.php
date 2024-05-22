@@ -2,7 +2,7 @@
 
 namespace App\Core\Auth;
 
-use App\Core\Utility\HttpException;
+use App\Core\Request\HttpException;
 
 
 class NotAuthorizedError extends HttpException
