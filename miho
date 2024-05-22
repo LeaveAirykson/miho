@@ -71,7 +71,7 @@ function create_model($name, $args = [])
     echo "Created: $file\n";
 }
 
-function create_config($name = null, $args = [])
+function create_config()
 {
     $file = CONFIG_PATH . "/config.local.php";
 
@@ -115,6 +115,11 @@ try {
                     echo "created path: $path\n";
                 }
             }, $paths);
+
+            if (!file_exists(CONFIG_PATH . "/config.local.php")) {
+                create_config();
+            }
+
             break;
 
 
