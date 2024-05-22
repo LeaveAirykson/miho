@@ -13,6 +13,7 @@ class Config
             $main = CONFIG_PATH . '/config.php';
             $local = CONFIG_PATH . '/config.local.php';
             $base = include $main;
+            $config = $base;
 
             if (file_exists($local)) {
                 $localconfig = include $local;
