@@ -1,6 +1,6 @@
 /config/config.local.php
 /public/
-!/public/api
+!/public/api/*
 /log/*.log
 /storage/asset
 /storage/data
