@@ -26,3 +26,17 @@ Colors:
 - Dokumente verwenden Controller
 - Controller können unterschiedliche Logik und Templates verwenden
 - Templates sind unter template/[controller]/[]
+
+Ignore für deploy:
+
+- /interface
+- /public/\*.html
+- /public/.htaccess
+- /public/assets
+- /storage
+- /log
+
+shared between release:
+
+- /storage
+- /log
