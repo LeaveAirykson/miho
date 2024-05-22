@@ -8,7 +8,7 @@ class RouteHandler
 {
     protected $controller;
     protected $action;
-    protected $guard;
+    protected $guard = [];
     protected $params = [];
 
     /**
@@ -53,6 +53,7 @@ class RouteHandler
     public function setParams($params)
     {
         return $this->params = $params;
+        return $this;
     }
 
     public function getParam($key)
@@ -62,12 +63,18 @@ class RouteHandler
 
     public function setParam($key, $value)
     {
-        return $this->params[$key] = $value;
+        $this->params[$key] = $value;
+        return $this;
     }
 
     public function setGuard($guard)
     {
         $this->guard = $guard;
         return $this;
+    }
+
+    public function getGuard()
+    {
+        return $this->guard;
     }
 }

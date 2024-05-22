@@ -11,7 +11,7 @@ use App\Core\Route\Route;
 
 class Router
 {
-    private static $routes = [];
+    protected static $routes = [];
 
     public static function add($method = null, $route = null, $controller = null, $guard = null)
     {

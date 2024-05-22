@@ -5,9 +5,10 @@ namespace App\Core;
 use App\Core\Route\Router;
 use App\Core\Request\HttpRequest;
 use App\Core\Request\HttpResponse;
+use App\Core\Request\HttpException;
+use App\Core\Route\RouteGuard;
 use App\Core\Route\RouteHandler;
 use App\Core\Utility\Logger;
-use App\Core\Utility\HttpException;
 use Throwable;
 
 class App
@@ -44,6 +45,7 @@ class App
         $this->getRequest()->setParams($handler->getParams());
 
         // protect execution by guard
+        (new RouteGuard($handler))->run();
 
         // execute controller action
         return $controller->$action($this->getRequest(), new HttpResponse());

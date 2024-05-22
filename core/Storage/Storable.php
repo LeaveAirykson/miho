@@ -2,9 +2,7 @@
 
 namespace App\Core\Storage;
 
-use App\Core\Utility\Logger;
-use App\Core\Utility\Operator;
-use Error;
+use App\CoreStorage\EntityFoundError;
 use RuntimeException;
 use JsonSerializable;
 
@@ -64,10 +62,7 @@ class Storable implements JsonSerializable
 
     public static function create($data = [])
     {
-        $entity = new static($data);
-        $saved = $entity->save();
-
-        return $saved;
+        return (new static(self::preCreate($data)))->save();
     }
 
     public static function runFieldChecks(array $data = [])
@@ -141,7 +136,7 @@ class Storable implements JsonSerializable
         }
 
         if (!is_dir($store)) {
-            mkdir($store, 0755, true);
+            mkdir($store, 0770, true);
         }
 
         if (!is_writable($store)) {
@@ -193,29 +188,11 @@ class Storable implements JsonSerializable
         return glob(self::getStorage() . '/*.json');
     }
 
-    // @TODO: implement conditions
+
     static function get(array | callable $conditions = []): StorableList
     {
-        $data = self::getAll();
-
-        if (count($conditions)) {
-            $data = self::filterByConditions($conditions, $data);
-        }
-
-        return new StorableList($data);
-    }
-
-    protected static function filterByConditions($conditions = [], $data = [])
-    {
-        return array_filter($data, function ($v) use ($conditions) {
-            foreach ($conditions as $key => $value) {
-                if ($v->{$key} !== $value) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
+        $list = new StorableList(self::getAll());
+        return count($conditions) ? $list->filterBy($conditions) : $list;
     }
 
     protected static function getAll(): array
@@ -240,7 +217,7 @@ class Storable implements JsonSerializable
         self::runFieldChecks($this->getData());
 
         // execute prepare callback
-        $this->prepare();
+        $this->preSave();
 
         // encode data 
         $data = json_encode($this->getData());
@@ -254,10 +231,6 @@ class Storable implements JsonSerializable
         return $this;
     }
 
-    public function prepare()
-    {
-    }
-
     public function getData()
     {
         return $this->data;
@@ -266,7 +239,7 @@ class Storable implements JsonSerializable
     public static function deleteById($id = null)
     {
         if (!self::exists($id)) {
-            throw new Error("Document with id $id could not be deleted! does not exist!");
+            throw new EntityFoundError("Document with id $id could not be deleted! does not exist!");
         }
 
         return unlink(self::filePath($id));
@@ -304,6 +277,7 @@ class Storable implements JsonSerializable
             return $this;
         }
 
+        // only allow fields defined in model
         if (!in_array($key, array_keys(self::getFields()))) {
             return $this;
         }
@@ -321,5 +295,26 @@ class Storable implements JsonSerializable
         }
 
         return $this->data[$key] ?? null;
+    }
+
+    /**
+     * Hook for logic that needs to run before
+     * the Storable is saved
+     *
+     * @return void
+     */
+    protected function preSave()
+    {
+    }
+
+    /**
+     * Hook for logic that needs to run before
+     * the Storable is created
+     *
+     * @param array $data the storable data
+     * @return void
+     */
+    protected static function preCreate($data = [])
+    {
     }
 }

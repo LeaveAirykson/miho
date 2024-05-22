@@ -6,10 +6,27 @@ use JsonSerializable;
 
 class StorableList implements JsonSerializable
 {
-    private $data;
+    private array $data;
 
-    function __construct($data)
+    function __construct(array $data)
     {
+        $this->data = $data;
+
+        return $this;
+    }
+
+    function filterBy($conditions = [])
+    {
+        $data = array_values(array_filter($this->data, function ($v) use ($conditions) {
+            foreach ($conditions as $key => $value) {
+                if ($v->{$key} !== $value) {
+                    return false;
+                }
+            }
+
+            return true;
+        }));
+
         $this->data = $data;
 
         return $this;

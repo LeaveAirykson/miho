@@ -5,15 +5,13 @@ namespace App\Controller;
 use App\Core\Request\HttpRequest;
 use App\Core\Request\HttpResponse;
 use App\Model\User;
-use App\Service\AuthService;
 
 class AuthController
 {
     public function login(HttpRequest $req, HttpResponse $res)
     {
-
         $vars = $req->getVariables();
-        $authData = AuthService::login($vars->email, $vars->password);
+        $authData = User::login($vars->email, $vars->password);
 
         return $res->json($authData);
     }
@@ -39,9 +37,7 @@ class AuthController
         //     'password' => 'testtest',
         // ]);
 
-        $data = User::get([])
-            ->sortBy('rank:desc')
-            ->getData();
+        $data = User::get(['active' => true])->getData();
 
         return $res->json($data);
     }
