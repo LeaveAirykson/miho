@@ -2,7 +2,6 @@
 
 namespace App\Model;
 
-
 use App\Core\Storage\Storable;
 
 class User extends Storable
@@ -15,15 +14,11 @@ class User extends Storable
             'constraints' => ['required', 'email', 'unique'],
         ],
         'password' => [
-            'constraints' => ['required']
+            'constraints' => ['required'],
+            'encryption' => 'password'
         ],
         'active' => [
             'default' => true,
         ]
     ];
-
-    function prepare()
-    {
-        $this->password = password_hash($this->password, PASSWORD_BCRYPT);
-    }
 }
