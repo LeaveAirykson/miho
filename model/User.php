@@ -26,6 +26,12 @@ class User extends Storable
         ]
     ];
 
+    protected static function preCreate($data = [])
+    {
+        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
+        return $data;
+    }
+
     public static function getByName(string $name)
     {
         return self::getByPropertyValue('name', $name, true);
