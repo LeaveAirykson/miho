@@ -1,3 +1,6 @@
 <?php
 
-return [];
+return [
+    "debug" => false,
+    "dev" => false
+];
