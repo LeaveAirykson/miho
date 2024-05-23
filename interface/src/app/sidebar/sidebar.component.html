@@ -1,0 +1,34 @@
+<div class="logo w-full p-2">MIHO</div>
+<nav>
+  <ul>
+    @for (item of items; track $index) {
+    <li>
+      @if (!item.items) {
+      <ng-template [ngTemplateOutlet]="menuitem"
+        [ngTemplateOutletContext]="{item, exact: true, reset: true}"></ng-template>
+      }
+      @else {
+      <span class="item item-parent" (click)="toggle($event)">
+        <span class="icon-{{ item.icon }} mr-2"></span>
+        {{ item.label }}
+        <span class="parent-icon icon-left-open"></span>
+      </span>
+      <ul class="sublist">
+        @for (sub of item.items; track $index) {
+        <ng-template [ngTemplateOutlet]="menuitem"
+          [ngTemplateOutletContext]="{item: sub, exact: false, reset: false, parent: item}"></ng-template>
+        }
+      </ul>
+      }
+    </li>
+    }
+  </ul>
+</nav>
+
+<ng-template #menuitem let-item="item" let-exact="exact" let-reset="reset" let-parent="parent">
+  <a class="item" routerLink="{{item.link}}" routerLinkActive="active" [routerLinkActiveOptions]="{exact}"
+    (click)="resetParents(reset)">
+    <span class="icon-{{item.icon ?? parent.icon}} mr-2"></span>
+    {{item.label}}
+  </a>
+</ng-template>

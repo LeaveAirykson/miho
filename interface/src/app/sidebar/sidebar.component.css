@@ -1,0 +1,64 @@
+nav {
+  font-size: .9rem;
+  margin-top: 1rem;
+}
+
+.logo::after {
+  content: '';
+  display: block;
+  height: 1px;
+  width: 3rem;
+  margin: 0 auto;
+  background-color: white;
+  opacity: .2;
+}
+
+.item {
+  color: white;
+  display: block;
+  padding: .6rem 1rem;
+  font-weight: bold;
+  text-decoration: none !important;
+  cursor: pointer;
+  position: relative;
+}
+
+.item-parent {
+  padding-right: 2rem;
+}
+
+.parent-icon {
+  position: absolute;
+  transform: rotate(-90deg);
+  right: .5rem;
+  opacity: .2;
+  color: white !important;
+}
+
+.item.active,
+.item-parent.open,
+.item-parent:has(+ .sublist .active) {
+  color: var(--color-orange);
+}
+
+.item:hover,
+.item-parent.open,
+.item-parent:has(+ .sublist .active) {
+  background-color: var(--color-blue-light);
+}
+
+.sublist {
+  display: none;
+  background-color: var(--color-blue-light);
+  font-size: .9em;
+}
+
+.item-parent.open+.sublist,
+.sublist:has(.item.active) {
+  display: block;
+  background-color: var(--color-blue-light);
+}
+
+.sublist .item:hover {
+  background-color: var(--color-blue-lighter);
+}
