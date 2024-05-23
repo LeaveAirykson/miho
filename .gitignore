@@ -2,6 +2,7 @@
 /public/*.html
 /public/.htaccess
 /public/assets
+/public/admin
 /log/*.log
 /storage/asset
 /storage/data
