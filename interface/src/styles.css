@@ -1,1 +1,8 @@
-/* You can add global styles to this file, and also import other style files */
+@import "styles/icon-font.css";
+@import "styles/vars.css";
+@import "../node_modules/tailwindcss/base.css";
+@import "styles/base.css";
+@import "../node_modules/tailwindcss/components.css";
+@import "styles/logo.css";
+@import "styles/form.css";
+@import "../node_modules/tailwindcss/utilities.css";
