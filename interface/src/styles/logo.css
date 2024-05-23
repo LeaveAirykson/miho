@@ -1,0 +1,11 @@
+.logo {
+  font-family: theme('fontFamily.display');
+  font-size: 2rem;
+  color: var(--color-orange);
+  text-align: center;
+  display: inline-block;
+  position: relative;
+  text-transform: uppercase;
+  user-select: none;
+  cursor: default;
+}

@@ -1,0 +1,14 @@
+:root {
+  --color-text: #141414;
+  --color-body: #f4f4f9;
+  --color-blue-lighter: #3f538f;
+  --color-blue-light: #35477e;
+  --color-blue: #2b3a67;
+  --color-teal: #496a81;
+  --color-orange: #fdca40;
+
+  --font-family: "Helvetica", sans-serif;
+  --line-height: 1.6;
+
+  --gutter: 1.5rem;
+}
