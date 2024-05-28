@@ -16,7 +16,7 @@ class Storable implements JsonSerializable
         'id' => ['type' => 'string']
     ];
 
-    public function __construct($data = [])
+    function __construct($data = [])
     {
         if (empty($data)) {
             throw new InvalidFieldError(static::class . " constructor data can not be empty!");
@@ -37,7 +37,7 @@ class Storable implements JsonSerializable
         }
     }
 
-    public function setDefaults()
+    function setDefaults()
     {
         $this->__set('rank', 0);
 
@@ -62,67 +62,57 @@ class Storable implements JsonSerializable
 
     public static function create($data = [])
     {
-        return (new static(self::preCreate($data)))->save();
+        return (new static(static::preCreate($data)))->save();
     }
 
-    public static function runFieldChecks(array $data = [])
+    function runFieldChecks()
     {
         if (empty(self::getFields())) {
             return;
         }
 
-        if (empty($data)) {
-            throw new InvalidFieldError('Empty data passed to runFieldChecks: ' . static::class);
-        }
+        $data = $this->getData();
 
-        foreach ($data as $key => $value) {
-            $def = self::getFields()[$key];
+        foreach ($data as $field => $value) {
+            $def = self::getFields()[$field];
 
             if (!$def) {
-                throw new InvalidFieldError("Field with key $key is not allowed in " . static::class);
+                throw new InvalidFieldError("Field with key $field is not allowed in " . static::class);
             }
 
-            if (isset($def['type'])) {
-                self::checkType($key, $value, $def['type']);
-            }
-
-            if (isset($def['constraints'])) {
-                self::checkConstraints($key, $value, $def['constraints']);
-            }
+            $this->checkConstraints($field, $value);
         }
     }
 
-    public static function checkType($key, $value, $type)
+    function resolveConstraint($constraint)
     {
-        if (gettype($value) !== $type) {
-            $t = gettype($value);
-            throw new InvalidFieldError("Invalid data type $key. is: $t needs: $type!");
+        $nsp = "App\\Core\\Storage\\Constraint\\";
+        try {
+            $path = $nsp . ucfirst($constraint) . "Constraint";
+            $class = str_replace('/\\\/', '\\', $path);
+            return new $class();
+        } catch (\Throwable $th) {
+            return null;
         }
     }
-    public static function checkConstraints($key, $value, $constraints)
+
+    function checkConstraints($field, $value)
     {
-        foreach ($constraints as $c) {
+        $def = self::getFields()[$field];
+        unset($def['default']);
 
-            if ($c === 'email' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                throw new InvalidFieldError("Invalid email address: $value");
+        foreach ($def as $constraint => $constraintValue) {
+            $constraintClass = ConstraintResolver::resolve($constraint);
+
+            if (!$constraintClass) {
+                continue;
             }
 
-            if ($c === 'required' && empty($value)) {
-                throw new InvalidFieldError("Constraint $c not met for: $key");
-            }
-
-            // unique constraint
-            if ($c === 'unique') {
-                $exists = self::getByPropertyValue($key, $value, true);
-
-                if ($exists) {
-                    throw new InvalidFieldError("Constraint $c not met for: $key");
-                }
-            }
+            $constraintClass->test($field, $value, $constraintValue, $this);
         }
     }
 
-    public function createId()
+    function createId()
     {
         return str_replace('.', '', uniqid('', true));
     }
@@ -211,10 +201,10 @@ class Storable implements JsonSerializable
         return self::parseFromFile(self::filePath($id));
     }
 
-    public function save()
+    function save()
     {
         // run checks for field definitions
-        self::runFieldChecks($this->getData());
+        $this->runFieldChecks();
 
         // execute prepare callback
         $this->preSave();
@@ -231,7 +221,7 @@ class Storable implements JsonSerializable
         return $this;
     }
 
-    public function getData()
+    function getData()
     {
         return $this->data;
     }
@@ -255,13 +245,13 @@ class Storable implements JsonSerializable
         return array_merge(static::$internalFields, static::$fields);
     }
 
-    public function jsonSerialize()
+    function jsonSerialize()
     {
         return $this->getData();
     }
 
 
-    public function __set($key = null, $val = null)
+    function __set($key = null, $val = null)
     {
         // everything besides array and strings are invalid
         if (!is_array($key) && !is_string($key)) {
@@ -288,7 +278,7 @@ class Storable implements JsonSerializable
         return $this;
     }
 
-    public function __get($key = null)
+    function __get($key = null)
     {
         if (!is_string($key)) {
             throw new RuntimeException('Invalid key given to ' . static::class . '->get(): ' . $key);
@@ -303,7 +293,7 @@ class Storable implements JsonSerializable
      *
      * @return void
      */
-    protected function preSave()
+    function preSave()
     {
     }
 
@@ -314,7 +304,8 @@ class Storable implements JsonSerializable
      * @param array $data the storable data
      * @return void
      */
-    protected static function preCreate($data = [])
+    static function preCreate(array $data = []): array
     {
+        return $data;
     }
 }

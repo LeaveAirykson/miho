@@ -13,36 +13,38 @@ class User extends Storable
 {
     static $fields = [
         'name' => [
-            'constraints' => ['required']
+            'required' => true
         ],
         'email' => [
-            'constraints' => ['required', 'email', 'unique'],
+            'required' => true,
+            'email' => true,
+            'unique' => true,
         ],
         'password' => [
-            'constraints' => ['required']
+            'required' => true
         ],
         'active' => [
             'default' => true,
         ]
     ];
 
-    protected static function preCreate($data = [])
+    static function preCreate(array $data = []): array
     {
         $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
         return $data;
     }
 
-    public static function getByName(string $name)
+    static function getByName(string $name)
     {
         return self::getByPropertyValue('name', $name, true);
     }
 
-    public static function getByEmail(string $email)
+    static function getByEmail(string $email)
     {
         return self::getByPropertyValue('email', $email, true);
     }
 
-    public static function login($email, $password)
+    static function login($email, $password)
     {
         if (!$email || !$password) {
             throw new MissingCredentialsError('Missing Credentials!');

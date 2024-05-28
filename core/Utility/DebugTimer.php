@@ -19,7 +19,7 @@ class DebugTimer
         $this->end = microtime(true);
     }
 
-    public function print()
+    public function result()
     {
         return ($this->end - $this->start) / 60;
     }

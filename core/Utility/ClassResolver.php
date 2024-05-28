@@ -14,8 +14,7 @@ class ClassResolver
         // assume its already namespaced
         // if regex matches
         if (!preg_match('/([A-Z]{1}[a-zA-z]+\\\)/', $name)) {
-            $className =
-                self::API_CONTROLLER_NAMESPACE . $name;
+            $className = self::API_CONTROLLER_NAMESPACE . $name;
         }
 
         try {
