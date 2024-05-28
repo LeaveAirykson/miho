@@ -15,30 +15,4 @@ class AuthController
 
         return $res->json($authData);
     }
-
-    public function testuser(HttpRequest $req, HttpResponse $res)
-    {
-        // User::create([
-        //     'name' => 'Hendl Beno3',
-        //     'email' => 'hendl3@shortpants.geeg',
-        //     'password' => 'testtest',
-        //     'rank' => 10
-        // ]);
-
-        // User::create([
-        //     'name' => 'Hendl Beno10',
-        //     'email' => 'hendl10@shortpants.geeg',
-        //     'password' => 'testtest',
-        // ]);
-
-        // User::create([
-        //     'name' => 'Hendl Beno2',
-        //     'email' => 'hendl2@shortpants.geeg',
-        //     'password' => 'testtest',
-        // ]);
-
-        $data = User::get(['active' => true])->getData();
-
-        return $res->json($data);
-    }
 }
