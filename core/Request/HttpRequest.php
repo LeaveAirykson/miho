@@ -2,7 +2,7 @@
 
 namespace App\Core\Request;
 
-class HttpRequest implements RequestInterface
+class HttpRequest
 {
     const GET = 'GET';
     const POST = 'POST';
