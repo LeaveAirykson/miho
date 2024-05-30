@@ -31,8 +31,7 @@ class Router
 
     public function parseRequest(HttpRequest &$req): Route
     {
-        $route = $this->findRoute($req->getCurrentUri(), $req->getCurrentMethod());
-        return $route->parseRequest($req);
+        return $this->findRoute($req->getCurrentUri(), $req->getCurrentMethod())->setRequest($req);
     }
 
     public function findRoute(string $path, string $method): Route

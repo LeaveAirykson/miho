@@ -105,7 +105,7 @@ class Route
         return $this->path;
     }
 
-    function parseRequest(HttpRequest &$request)
+    function setRequest(HttpRequest &$request)
     {
         $this->request = $request;
         return $this;
