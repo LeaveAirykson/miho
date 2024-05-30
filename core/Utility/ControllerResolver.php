@@ -2,7 +2,7 @@
 
 namespace App\Core\Utility;
 
-class ClassResolver
+class ControllerResolver
 {
 
     const API_CONTROLLER_NAMESPACE = 'App\\Controller\\';

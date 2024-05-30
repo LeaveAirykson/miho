@@ -2,7 +2,7 @@
 
 namespace App\Core\Route;
 
-use App\Core\Utility\ClassResolver;
+use App\Core\Utility\ControllerResolver;
 
 class RouteHandler
 {
@@ -24,7 +24,7 @@ class RouteHandler
      */
     public function setController($name)
     {
-        $this->controller = ClassResolver::resolve($name);
+        $this->controller = ControllerResolver::resolve($name);
         return $this;
     }
 
