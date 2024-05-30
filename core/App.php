@@ -6,15 +6,19 @@ use App\Core\Route\Router;
 use App\Core\Request\HttpRequest;
 use App\Core\Request\HttpResponse;
 use App\Core\Request\HttpException;
-use App\Core\Route\RouteGuard;
-use App\Core\Route\RouteHandler;
+use App\Core\Route\Route;
 use App\Core\Utility\Logger;
 use Throwable;
 
 class App
 {
-
     public ?HttpRequest $request = null;
+    public Router $router;
+
+    function __construct()
+    {
+        $this->router = new Router();
+    }
 
     function run()
     {
@@ -25,27 +29,28 @@ class App
         }
 
         try {
-            $handler = Router::read(
+            $route = $this->router->findRoute(
                 $this->getRequest()->getCurrentUri(),
                 $this->getRequest()->getCurrentMethod()
             );
 
-            return $this->callRouteController($handler);
+            return $this->callRouteController($route);
         } catch (\Throwable $th) {
             return $this->handleError($th, new HttpResponse());
         }
     }
 
-    public function callRouteController(RouteHandler $handler)
+    public function callRouteController(Route $route)
     {
-        $controller = $handler->getController();
-        $action = $handler->getAction();
+        $controller = $route->getController();
+        $action = $route->getAction();
 
         // attach route params to request
-        $this->getRequest()->setParams($handler->getParams());
+        $this->getRequest()->setParams($route->getParams());
 
         // protect execution by guard
-        (new RouteGuard($handler))->run();
+        // @TODO: Implement route guard
+        // (new RouteGuard($route))->run();
 
         // execute controller action
         return $controller->$action($this->getRequest(), new HttpResponse());
@@ -61,9 +66,9 @@ class App
     }
 
 
-    public function route($method = null, $route = null, $controller = null, $guard = null)
+    public function route(string $method, string $route, string $controller, array $guard = [])
     {
-        Router::add($method, $route, $controller, $guard);
+        $this->router->add($method, $route, $controller, $guard);
 
         return $this;
     }

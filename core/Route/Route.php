@@ -37,14 +37,14 @@ class Route
     function setController(string $controller)
     {
         $parts = explode('::', $controller);
-        $this->controller = ControllerResolver::resolve($parts[0]);
+        $this->controller = $parts[0];
         $this->action = $parts[1] ?? $this->action;
         return $this;
     }
 
     function getController()
     {
-        return $this->controller;
+        return ControllerResolver::resolve($this->controller);
     }
 
     function setAction(string $action)

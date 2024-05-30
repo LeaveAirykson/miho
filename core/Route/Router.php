@@ -11,103 +11,90 @@ use App\Core\Route\Route;
 
 class Router
 {
-    protected static $routes = [];
+    protected array $routes = [];
 
-    public static function add($method = null, $route = null, $controller = null, $guard = null)
+    public function add(string $method, string $path, string $controller, array $guard = [])
     {
-
-        if (is_null($controller) || is_null($route) || is_null($method)) {
+        if (!is_string($controller) || !is_string($path) || !is_string($method)) {
             throw new \RuntimeException('Invalid route set, missing parameters!');
         }
 
-        if (isset(self::$routes[$route][$method])) {
+        if (isset($this->routes[$path][$method])) {
             throw new \RuntimeException('Controller for uri is already registered');
         }
 
-        self::$routes[$route][$method] = [$controller, $guard];
+        $this->routes[$path][$method] = new Route($method, $path, $controller, $guard);
+
+        return $this;
     }
 
-    public static function read($uri, $method = false)
+    public function getHandler(string $path, string $method)
     {
-        $route = self::matchesRoute($uri);
-        $matching = null;
+        $route = $this->findRoute($path, $method);
 
-        if (isset(self::$routes[$route->route][$method])) {
-            $matching = self::makeMatch($route, $method);
+        if (is_null($route)) {
+            throw new RouteNotFoundError("No matching route found for: $path ($method)");
         }
 
-        if (is_null($matching)) {
-            throw new RouteNotFoundError('No matching route found for: ' . $uri);
-        }
-
-        return $matching;
+        return $route;
     }
 
-    protected static function matchesRoute($uri)
+    public function findRoute(string $path, string $method): null|Route
     {
-        $matchingRoute = new Route();
+        // return right away if its a direct match
+        // otherwise proceed with regex matching
+        $route = $this->routes[$path][$method] ?? null;
 
-        foreach (self::$routes as $route => $options) {
-            // return right away if uri directly matches
-            // otherwise proceed with regex matching
-            if ($route == $uri) {
-                $matchingRoute->route = $route;
-                break;
+        if ($route) {
+            return $route;
+        }
+
+        foreach ($this->routes as $_path => $methods) {
+            // ignore every route path in which requested method
+            // is not defined
+            if (!isset($methods[$method])) {
+                continue;
             }
 
-            // create regex pattern
-            $pattern = preg_replace('/:[a-zA-Z0-9]+/', '([a-zA-Z0-9]+)', $route);
-
             // try to find matching route by regex
-            preg_match('~^' . $pattern . '$~', $uri, $matches);
+            $pattern = preg_replace('/:[a-zA-Z0-9_]+/', '([a-zA-Z0-9_]+)', $_path);
+            preg_match('~^' . $pattern . '$~', $path, $matches);
 
             // remove first entry as it always
             // includes whole matching string
             array_shift($matches);
 
-            // return route data with attached
-            // params if they exists
-            if (isset($matches[0])) {
-                // extract params from route
-                preg_match_all('/:([a-zA-Z0-9]+)/', addslashes($route), $paramExtr);
+            // ignore route if regex match fails
+            if (!isset($matches[0])) {
+                continue;
+            }
 
-                // map param key to value
-                if (isset($paramExtr[1])) {
-                    $params = null;
+            // assume a match and reference route
+            $route = $methods[$method];
 
-                    foreach ($paramExtr[1] as $idx => $key) {
-                        $params[$key] = $matches[$idx];
-                    }
+            // extract params from route
+            preg_match_all('/:([a-zA-Z0-9]+)/', addslashes($path), $paramExtr);
 
-                    // save params to matching route
-                    $matchingRoute->params = $params;
+            // map param key to value
+            if (isset($paramExtr[1])) {
+                $params = [];
+
+                foreach ($paramExtr[1] as $idx => $key) {
+                    $params[$key] = $matches[$idx];
                 }
 
-                // finally save route path
-                $matchingRoute->route = $route;
-                break;
+                // save params to matching route
+                $route->params = $params;
             }
+
+            return $route;
         }
 
-        return $matchingRoute;
+        return null;
     }
 
-    protected static function makeMatch(Route $route, $method = false)
+    public function getRoutes()
     {
-        $routemap = self::$routes[$route->route][$method];
-        $parts = explode('::', $routemap[0]);
-
-        $handler = new RouteHandler();
-        $handler->setController($parts[0]);
-        $handler->setAction($parts[1]);
-        $handler->setParams($route->params);
-        $handler->setGuard($routemap[1]);
-
-        return $handler;
-    }
-
-    public static function getAll()
-    {
-        return self::$routes;
+        return $this->routes;
     }
 }
