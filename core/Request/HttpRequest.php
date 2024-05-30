@@ -52,6 +52,18 @@ class HttpRequest implements RequestInterface
         return $this->params;
     }
 
+    public function setParam(string $key, $value)
+    {
+        $this->params[$key] = $value;
+
+        return $this;
+    }
+
+    public function getParam(string $key)
+    {
+        return $this->params[$key] ?? null;
+    }
+
     public function getAuthToken()
     {
         if (array_key_exists('HTTP_AUTHORIZATION', $_SERVER) && preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)) {
