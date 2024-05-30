@@ -29,32 +29,15 @@ class App
         }
 
         try {
-            $route = $this->router->findRoute(
-                $this->getRequest()->getCurrentUri(),
-                $this->getRequest()->getCurrentMethod()
-            );
-
-            return $this->callRouteController($route);
+            $this->router
+                ->parseRequest($this->getRequest())
+                ->callMiddleware()
+                ->callController();
         } catch (\Throwable $th) {
             return $this->handleError($th, new HttpResponse());
         }
     }
 
-    public function callRouteController(Route $route)
-    {
-        $controller = $route->getController();
-        $action = $route->getAction();
-
-        // attach route params to request
-        $this->getRequest()->setParams($route->getParams());
-
-        // protect execution by guard
-        // @TODO: Implement route guard
-        // (new RouteGuard($route))->run();
-
-        // execute controller action
-        return $controller->$action($this->getRequest(), new HttpResponse());
-    }
 
     public function getRequest()
     {
@@ -66,9 +49,9 @@ class App
     }
 
 
-    public function route(string $method, string $route, string $controller, array $guard = [])
+    public function route(string $method, string $route, string $controller, array $middleware = [])
     {
-        $this->router->add($method, $route, $controller, $guard);
+        $this->router->add($method, $route, $controller, $middleware);
 
         return $this;
     }

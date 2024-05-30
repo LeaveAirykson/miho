@@ -2,23 +2,25 @@
 
 namespace App\Core\Route;
 
-use App\Core\Utility\ControllerResolver;
+use App\Core\Request\HttpRequest;
+use App\Core\Request\HttpResponse;
 
 class Route
 {
     private string $method;
     private string $path;
-    private $controller;
-    private ?string $action = null;
-    private array $guard = [];
+    private string $controller;
+    private string $action = 'default';
+    private array $middleware = [];
     private array $params = [];
+    protected HttpRequest $request;
 
-    function __construct($method, $path, $controller, array $guard = [])
+    function __construct(string $method, string $path, string $controller, array $middleware = [])
     {
         $this->setMethod($method);
         $this->setPath($path);
         $this->setController($controller);
-        $this->setGuard($guard);
+        $this->setMiddleware($middleware);
 
         return $this;
     }
@@ -36,15 +38,16 @@ class Route
 
     function setController(string $controller)
     {
-        $parts = explode('::', $controller);
+        $parts = explode("::", $controller);
         $this->controller = $parts[0];
         $this->action = $parts[1] ?? $this->action;
+
         return $this;
     }
 
     function getController()
     {
-        return ControllerResolver::resolve($this->controller);
+        return $this->controller;
     }
 
     function setAction(string $action)
@@ -80,15 +83,15 @@ class Route
         return $this->params[$name] ?? null;
     }
 
-    function setGuard(?array $guard)
+    function setMiddleware(?array $middleware)
     {
-        $this->guard = $guard;
+        $this->middleware = $middleware;
         return $this;
     }
 
-    function getGuard()
+    function getMiddleware()
     {
-        return $this->guard;
+        return $this->middleware;
     }
 
     function setPath(string $path)
@@ -100,5 +103,27 @@ class Route
     function getPath()
     {
         return $this->path;
+    }
+
+    function parseRequest(HttpRequest &$request)
+    {
+        $this->request = $request;
+        return $this;
+    }
+
+    function callMiddleware()
+    {
+        foreach ($this->getMiddleware() as $middleware) {
+            (new ("App\\Middleware\\$middleware"))->run($this->request);
+        }
+
+        return $this;
+    }
+
+    function callController()
+    {
+        $controller = new ("App\\Controller\\" . $this->controller)();
+        $action = $this->action;
+        return $controller->$action($this->request, new HttpResponse());
     }
 }

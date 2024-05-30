@@ -7,13 +7,14 @@
 
 namespace App\Core\Route;
 
+use App\Core\Request\HttpRequest;
 use App\Core\Route\Route;
 
 class Router
 {
     protected array $routes = [];
 
-    public function add(string $method, string $path, string $controller, array $guard = [])
+    public function add(string $method, string $path, string $controller, array $middleware = [])
     {
         if (!is_string($controller) || !is_string($path) || !is_string($method)) {
             throw new \RuntimeException('Invalid route set, missing parameters!');
@@ -23,23 +24,18 @@ class Router
             throw new \RuntimeException('Controller for uri is already registered');
         }
 
-        $this->routes[$path][$method] = new Route($method, $path, $controller, $guard);
+        $this->routes[$path][$method] = new Route($method, $path, $controller, $middleware);
 
         return $this;
     }
 
-    public function getHandler(string $path, string $method)
+    public function parseRequest(HttpRequest &$req): Route
     {
-        $route = $this->findRoute($path, $method);
-
-        if (is_null($route)) {
-            throw new RouteNotFoundError("No matching route found for: $path ($method)");
-        }
-
-        return $route;
+        $route = $this->findRoute($req->getCurrentUri(), $req->getCurrentMethod());
+        return $route->parseRequest($req);
     }
 
-    public function findRoute(string $path, string $method): null|Route
+    public function findRoute(string $path, string $method): Route
     {
         // return right away if its a direct match
         // otherwise proceed with regex matching
@@ -90,7 +86,7 @@ class Router
             return $route;
         }
 
-        return null;
+        throw new RouteNotFoundError("No matching route found for: $path ($method)");
     }
 
     public function getRoutes()

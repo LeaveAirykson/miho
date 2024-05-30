@@ -82,7 +82,7 @@ class TestController
     function default(HttpRequest $req, HttpResponse $res)
     {
 
-        $data = ['success' => true, 'default' => true];
+        $data = ['success' => true, 'default' => true, 'params' => $req->getParams()];
 
         return $res->json($data);
     }
