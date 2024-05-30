@@ -4,7 +4,7 @@ namespace App\Segment;
 
 use App\Core\Template\Segment;
 
-class TextSegment extends Segment
+class Text extends Segment
 {
     function preRender()
     {
