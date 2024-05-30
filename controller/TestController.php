@@ -13,20 +13,20 @@ class TestController
 {
     public function testdoc(HttpRequest $req, HttpResponse $res)
     {
-        // Document::create([
-        //     'name' => 'Startseite',
-        //     'author' => 'Geeg',
-        //     'langcode' => 'de',
-        //     'segments' => [
-        //         [
-        //             'type' => 'Text',
-        //             'rank' => 0,
-        //             'data' => [
-        //                 'content' => '<h1>Willkommen auf der MIHO Testseite</h1>'
-        //             ]
-        //         ]
-        //     ]
-        // ]);
+        Document::create([
+            'name' => 'Startseite',
+            'author' => 'Geeg',
+            'langcode' => 'de',
+            'segments' => [
+                [
+                    'type' => 'Text',
+                    'rank' => 0,
+                    'data' => [
+                        'content' => '<h1>Willkommen auf der MIHO Testseite</h1>'
+                    ]
+                ]
+            ]
+        ]);
 
         $data = Document::get()->getData();
 
@@ -75,6 +75,14 @@ class TestController
         // ]);
 
         $data = User::get(['active' => true])->getData();
+
+        return $res->json($data);
+    }
+
+    function default(HttpRequest $req, HttpResponse $res)
+    {
+
+        $data = ['success' => true, 'default' => true];
 
         return $res->json($data);
     }
