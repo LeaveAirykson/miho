@@ -1,6 +1,7 @@
 <?php
 
 $autoloadMap = [
+    'App\\Middleware\\' => '/middleware/',
     'App\\Core\\' => '/core/',
     'App\\Controller\\' => '/controller/',
     'App\\Model\\' => '/model/',
