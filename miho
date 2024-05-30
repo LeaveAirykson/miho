@@ -10,6 +10,14 @@ $arguments = array_splice($argv, 2) ?? [];
 function showHelp()
 {
     echo "\nMiho cli\n";
+    echo "\nUsage: php miho <command> [option]\n";
+    echo "\nCommands:\n";
+
+    echo "setup\n";
+    echo "Creates application structure and base configuration.\n";
+
+    echo "\ncreate <entity> <name>\n";
+    echo "Create a specific entity. Available entities are: model, segment.\n";
 }
 
 function parseArgs($arguments = [])
@@ -106,7 +114,7 @@ function create_config()
 
 try {
     switch ($command) {
-        case 'init':
+        case 'setup':
             $paths = [DATA_PATH, ASSETS_PATH, LOG_PATH];
 
             array_map(function ($path) {
