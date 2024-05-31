@@ -7,9 +7,6 @@ use App\Core\Request\HttpResponse;
 
 class Route
 {
-    const CONTROLLER_NAMESPACE = "App\\Controller\\";
-    const MIDDLEWARE_NAMESPACE = "App\\Middleware\\";
-
     private string $method;
     private string $path;
     private string|\Closure $controller;
@@ -51,14 +48,6 @@ class Route
         if (is_array($controller)) {
             $this->controller = $controller[0];
             $this->action = $controller[1] ?? $this->action;
-
-            return $this;
-        }
-
-        if (is_string($controller)) {
-            $parts = explode("::", $controller);
-            $this->controller = $parts[0];
-            $this->action = $parts[1] ?? $this->action;
 
             return $this;
         }
@@ -143,7 +132,7 @@ class Route
     function callMiddleware()
     {
         foreach ($this->getMiddleware() as $middleware) {
-            (self::resolveMiddleware($middleware))->run($this->request);
+            (self::resolveClass($middleware))->run($this->request);
         }
 
         return $this;
@@ -157,37 +146,15 @@ class Route
             return $controller($this->request, new HttpResponse());
         }
 
-        $controller = self::resolveController($controller);
+        $controller = self::resolveClass($controller);
         $action = $this->action;
 
         return $controller->$action($this->request, new HttpResponse());
     }
 
-    static function resolveController(string $controller)
+    static function resolveClass(string $name)
     {
-        return self::resolve($controller, self::CONTROLLER_NAMESPACE);
-    }
-
-    static function resolveMiddleware(string $middleware)
-    {
-        return self::resolve($middleware, self::MIDDLEWARE_NAMESPACE);
-    }
-
-    static function resolve(string $name, $ns)
-    {
-        $className = $name;
-
-        // prefix with namespace if missing
-        if (!self::isNamespaced($name)) {
-            $className = $ns . $name;
-        }
-
-        $class = str_replace('/\\\/', '\\', $className);
+        $class = str_replace('/\\\/', '\\', $name);
         return new $class();
-    }
-
-    static function isNamespaced(string $name)
-    {
-        return preg_match('/([A-Z]{1}[a-zA-z]+\\\)/', $name);
     }
 }
