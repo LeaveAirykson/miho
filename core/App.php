@@ -6,7 +6,6 @@ use App\Core\Route\Router;
 use App\Core\Request\HttpRequest;
 use App\Core\Request\HttpResponse;
 use App\Core\Request\HttpException;
-use App\Core\Route\Route;
 use App\Core\Utility\Logger;
 use Throwable;
 
@@ -24,22 +23,26 @@ class App
     {
         // workaround to handle preflight requests
         // for CORS situations in local vm
-        if (Config::get('dev') && $this->getRequest()->getCurrentMethod() === 'OPTIONS') {
+        if (Config::get('dev') && $this->getRequest()->getCurrentMethod() === HttpRequest::PREFLIGHT) {
             return (new HttpResponse())->status(204)->send();
         }
 
         try {
             $this->router
-                ->parseRequest($this->getRequest())
+                ->loadRoute(
+                    $this->getRequest()->getCurrentUri(),
+                    $this->getRequest()->getCurrentMethod()
+                )
+                ->setRequest($this->getRequest())
                 ->callMiddleware()
                 ->callController();
         } catch (\Throwable $th) {
-            return $this->handleError($th, new HttpResponse());
+            return $this->handleError($th);
         }
     }
 
 
-    public function getRequest()
+    function getRequest()
     {
         if ($this->request === null) {
             $this->request = new HttpRequest();
@@ -48,18 +51,76 @@ class App
         return $this->request;
     }
 
-
-    public function route(string $method, string $route, string $controller, array $middleware = [])
+    /**
+     * Define a route for GET method
+     *
+     * @param string $path
+     * @param array|string|\Closure $controller
+     * @param array $middleware
+     * @return void
+     */
+    function get(string $path, array|string|\Closure $controller, array $middleware = []): void
     {
-        $this->router->add($method, $route, $controller, $middleware);
-
-        return $this;
+        $this->router->add(HttpRequest::GET, $path, $controller, $middleware);
     }
 
-    public function handleError(Throwable | HttpException $th, HttpResponse $response)
+    /**
+     * Define a route for POST method
+     *
+     * @param string $path
+     * @param array|string|\Closure $controller
+     * @param array $middleware
+     * @return void
+     */
+    function post(string $path, array|string|\Closure $controller, array $middleware = []): void
+    {
+        $this->router->add(HttpRequest::POST, $path, $controller, $middleware);
+    }
+
+    /**
+     * Define a route for POST method
+     *
+     * @param string $path
+     * @param array|string|\Closure $controller
+     * @param array $middleware
+     * @return void
+     */
+    function put(string $path, array|string|\Closure $controller, array $middleware = []): void
+    {
+        $this->router->add(HttpRequest::PUT, $path, $controller, $middleware);
+    }
+
+    /**
+     * Define a route for DELETE method
+     *
+     * @param string $path
+     * @param array|string|\Closure $controller
+     * @param array $middleware
+     * @return void
+     */
+    function delete(string $path, array|string|\Closure $controller, array $middleware = []): void
+    {
+        $this->router->add(HttpRequest::POST, $path, $controller, $middleware);
+    }
+
+    /**
+     * Define a route for preflight (OPTIONS method)
+     *
+     * @param string $path
+     * @param array|string|\Closure $controller
+     * @param array $middleware
+     * @return void
+     */
+    function preflight(string $path, array|string|\Closure $controller, array $middleware = []): void
+    {
+        $this->router->add(HttpRequest::PREFLIGHT, $path, $controller, $middleware);
+    }
+
+    function handleError(Throwable | HttpException $th)
     {
         // log the whole error
         $msg = $th->getMessage();
+        $response = new HttpResponse();
 
         if (Config::get('debug')) {
             $msg = [

@@ -8,6 +8,7 @@ class HttpRequest
     const POST = 'POST';
     const PUT = 'PUT';
     const DELETE = 'DELETE';
+    const PREFLIGHT = 'OPTIONS';
 
     private $authToken = null;
     private $params = [];
@@ -104,5 +105,10 @@ class HttpRequest
         }
 
         return (object) $variables;
+    }
+
+    static function getMethods()
+    {
+        return [self::GET, self::POST, self::DELETE, self::PREFLIGHT, self::PUT];
     }
 }

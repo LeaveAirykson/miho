@@ -7,34 +7,35 @@
 
 namespace App\Core\Route;
 
-use App\Core\Request\HttpRequest;
 use App\Core\Route\Route;
 
 class Router
 {
     protected array $routes = [];
 
-    public function add(string $method, string $path, string $controller, array $middleware = [])
+    private function validController(array|string|\Closure $controller)
     {
-        if (!is_string($controller) || !is_string($path) || !is_string($method)) {
-            throw new \RuntimeException('Invalid route set, missing parameters!');
+        return !$controller instanceof \Closure && in_array(gettype($controller), ['string', 'array']);
+    }
+
+    public function add(string $method, string $path, array|string|\Closure $controller, array $middleware = []): void
+    {
+        if (!is_string($path) || !is_string($method)) {
+            throw new \RuntimeException('Invalid route passed: missing parameters for path or method!');
+        }
+
+        if (!$this->validController($controller)) {
+            throw new \RuntimeException("Invalid controller passed to route $path");
         }
 
         if (isset($this->routes[$path][$method])) {
-            throw new \RuntimeException('Controller for uri is already registered');
+            throw new \RuntimeException("Controller for path $path is already registered");
         }
 
         $this->routes[$path][$method] = new Route($method, $path, $controller, $middleware);
-
-        return $this;
     }
 
-    public function parseRequest(HttpRequest &$req): Route
-    {
-        return $this->findRoute($req->getCurrentUri(), $req->getCurrentMethod())->setRequest($req);
-    }
-
-    public function findRoute(string $path, string $method): Route
+    public function loadRoute(string $path, string $method): Route
     {
         // return right away if its a direct match
         // otherwise proceed with regex matching
