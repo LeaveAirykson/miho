@@ -6,16 +6,18 @@ use App\Core\Route\Router;
 use App\Core\Request\HttpRequest;
 use App\Core\Request\HttpResponse;
 use App\Core\Request\HttpException;
+use App\Core\Session\Session;
 use App\Core\Utility\Logger;
 use Throwable;
 
 class App
 {
-    public ?HttpRequest $request = null;
     public Router $router;
+    public Session $session;
 
     function __construct()
     {
+        $this->session = new Session();
         $this->router = new Router();
     }
 
@@ -33,7 +35,6 @@ class App
                     $this->getRequest()->getCurrentUri(),
                     $this->getRequest()->getCurrentMethod()
                 )
-                ->setRequest($this->getRequest())
                 ->callMiddleware()
                 ->callController();
         } catch (\Throwable $th) {
@@ -44,11 +45,7 @@ class App
 
     function getRequest()
     {
-        if ($this->request === null) {
-            $this->request = new HttpRequest();
-        }
-
-        return $this->request;
+        return $this->router->request;
     }
 
     /**
