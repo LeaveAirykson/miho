@@ -2,6 +2,8 @@
 
 namespace App\Core\Request;
 
+use App\Core\Session\Session;
+
 class HttpRequest
 {
     const GET = 'GET';
@@ -10,8 +12,57 @@ class HttpRequest
     const DELETE = 'DELETE';
     const PREFLIGHT = 'OPTIONS';
 
-    private $authToken = null;
-    private $params = [];
+    private ?ParamBag $params;
+
+    function __construct()
+    {
+
+        $this->extractAuthToken();
+        $this->extractRequestParams();
+
+        return $this;
+    }
+
+    private function extractAuthToken()
+    {
+        // extract auth token from authorization header
+        if (array_key_exists('HTTP_AUTHORIZATION', $_SERVER) && preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)) {
+            $authToken = $matches[1] ?? null;
+            (new Session())->set('authToken', $authToken);
+        }
+    }
+
+    private function extractRequestParams()
+    {
+
+        $this->params = new ParamBag();
+
+        switch ($this->getCurrentMethod()) {
+            case self::GET:
+                $this->setParams($_GET);
+                break;
+            case self::POST:
+                if ($_SERVER['CONTENT_TYPE'] == 'application/json') {
+                    $content = file_get_contents('php://input');
+                    $this->setParams((array)json_decode($content));
+                } else {
+                    $this->setParams($_POST);
+                }
+                break;
+            case self::DELETE:
+            case self::PUT:
+                $content = file_get_contents('php://input');
+                if ($_SERVER['CONTENT_TYPE'] == 'application/json') {
+                    $this->setParams((array)json_decode($content));
+                } else {
+                    parse_str(
+                        $content,
+                        $this->params
+                    );
+                }
+                break;
+        }
+    }
 
     /**
      * Get current request method from $_SERVER variable
@@ -45,66 +96,26 @@ class HttpRequest
 
     public function setParams($params = [])
     {
-        $this->params = $params;
+        foreach ($params as $key => $value) {
+            $this->setParam($key, $value);
+        }
     }
 
-    public function getParams()
+    public function getParams(): array
     {
-        return $this->params;
+        return $this->params->all();
     }
 
     public function setParam(string $key, $value)
     {
-        $this->params[$key] = $value;
+        $this->params->set($key, $value);
 
         return $this;
     }
 
     public function getParam(string $key)
     {
-        return $this->params[$key] ?? null;
-    }
-
-    public function getAuthToken()
-    {
-        if (array_key_exists('HTTP_AUTHORIZATION', $_SERVER) && preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)) {
-            $this->authToken = $matches[1];
-        }
-
-        return $this->authToken;
-    }
-
-    /**
-     * Get variables from HTTP
-     * @return object
-     */
-    public function getVariables()
-    {
-        $variables = [];
-        switch ($this->getCurrentMethod()) {
-            case self::GET:
-                $variables = $_GET;
-                break;
-            case self::POST:
-                if ($_SERVER['CONTENT_TYPE'] == 'application/json') {
-                    $content = file_get_contents('php://input');
-                    $variables = (array)json_decode($content);
-                } else {
-                    $variables = $_POST;
-                }
-                break;
-            case self::DELETE:
-            case self::PUT:
-                $content = file_get_contents('php://input');
-                if ($_SERVER['CONTENT_TYPE'] == 'application/json') {
-                    $variables = (array)json_decode($content);
-                } else {
-                    parse_str($content, $variables);
-                }
-                break;
-        }
-
-        return (object) $variables;
+        return $this->params->get($key);
     }
 
     static function getMethods()
