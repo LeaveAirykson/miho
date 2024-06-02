@@ -7,18 +7,29 @@
 
 namespace App\Core\Route;
 
+use App\Core\Request\HttpRequest;
+use App\Core\Request\HttpResponse;
 use App\Core\Route\Route;
 
 class Router
 {
     protected array $routes = [];
+    public ?HttpRequest $request = null;
+    public ?Route $current = null;
+
+    function __construct()
+    {
+        $this->request = new HttpRequest();
+
+        return $this;
+    }
 
     private function validController(array|string|\Closure $controller)
     {
         return !$controller instanceof \Closure && in_array(gettype($controller), ['string', 'array']);
     }
 
-    public function add(string $method, string $path, array|string|\Closure $controller, array $middleware = []): void
+    public function add(string $method, string $path, array|string|\Closure $controller, array $middleware = []): self
     {
         if (!is_string($path) || !is_string($method)) {
             throw new \RuntimeException('Invalid route passed: missing parameters for path or method!');
@@ -33,16 +44,22 @@ class Router
         }
 
         $this->routes[$path][$method] = new Route($method, $path, $controller, $middleware);
+
+        return $this;
     }
 
-    public function loadRoute(string $path, string $method): Route
+    public function loadRoute(string $path, string $method): self
     {
+        // reset current
+        $this->current = null;
+
         // return right away if its a direct match
         // otherwise proceed with regex matching
         $route = $this->routes[$path][$method] ?? null;
 
         if ($route) {
-            return $route;
+            $this->current = $route;
+            return $this;
         }
 
         foreach ($this->routes as $_path => $methods) {
@@ -83,14 +100,40 @@ class Router
                 $route->params = $params;
             }
 
-            return $route;
+            $this->current = $route;
+
+            return $this;
         }
 
         throw new RouteNotFoundError("No matching route found for: $path ($method)");
     }
 
-    public function getRoutes()
+    function callMiddleware()
     {
-        return $this->routes;
+        foreach ($this->current->middleware as $middleware) {
+            (self::resolveClass($middleware))->run($this);
+        }
+
+        return $this;
+    }
+
+    function callController()
+    {
+        $controller = $this->current->controller;
+
+        if ($controller instanceof \Closure) {
+            return $controller($this->request, new HttpResponse());
+        }
+
+        $controller = self::resolveClass($controller);
+        $action = $this->current->action;
+
+        return $controller->$action($this->request, new HttpResponse());
+    }
+
+    static function resolveClass(string $name)
+    {
+        $class = str_replace('/\\\/', '\\', $name);
+        return new $class();
     }
 }

@@ -3,29 +3,19 @@
 namespace App\Core\Route;
 
 use App\Core\Request\HttpRequest;
-use App\Core\Request\HttpResponse;
+use App\Middleware\AuthGuard;
 
 class Route
 {
-    private string $method;
-    private string $path;
-    private string|\Closure $controller;
-    private string $action = 'default';
-    private array $middleware = [];
-    private array $params = [];
+    public string $method;
+    public string $path;
+    public array|string|\Closure $controller;
+    public string $action = 'default';
+    public array $middleware = [];
+    public array $params = [];
     protected HttpRequest $request;
 
-    function __construct(string $method, string $path, array|string|\Closure $controller, array $middleware = [])
-    {
-        $this->setMethod($method);
-        $this->setPath($path);
-        $this->setController($controller);
-        $this->setMiddleware($middleware);
-
-        return $this;
-    }
-
-    function setMethod(string $method)
+    function __construct(string $method, string $path, array|string|\Closure $controller, array $middleware = [AuthGuard::class])
     {
         $method = trim(strtoupper($method));
 
@@ -34,47 +24,20 @@ class Route
         }
 
         $this->method = $method;
+        $this->path = $path;
+        $this->controller = $controller;
+        $this->middleware = $middleware;
 
-        return $this;
-    }
-
-    function getMethod()
-    {
-        return $this->method;
-    }
-
-    function setController(array|string|\Closure $controller)
-    {
         if (is_array($controller)) {
             $this->controller = $controller[0];
             $this->action = $controller[1] ?? $this->action;
-
-            return $this;
         }
 
-        $this->controller = $controller;
-
         return $this;
     }
 
-    function getController()
-    {
-        return $this->controller;
-    }
 
-    function setAction(string $action)
-    {
-        $this->action = $action;
-
-        return $this;
-    }
-
-    function getAction()
-    {
-        return $this->action;
-    }
-
-    function setParams(?array $params = null)
+    function setParams(array $params = [])
     {
         $this->params = $params;
 
@@ -96,65 +59,5 @@ class Route
     function getParam(string $name)
     {
         return $this->params[$name] ?? null;
-    }
-
-    function setMiddleware(?array $middleware)
-    {
-        $this->middleware = $middleware;
-
-        return $this;
-    }
-
-    function getMiddleware()
-    {
-        return $this->middleware;
-    }
-
-    function setPath(string $path)
-    {
-        $this->path = $path;
-
-        return $this;
-    }
-
-    function getPath()
-    {
-        return $this->path;
-    }
-
-    function setRequest(HttpRequest &$request)
-    {
-        $this->request = $request;
-
-        return $this;
-    }
-
-    function callMiddleware()
-    {
-        foreach ($this->getMiddleware() as $middleware) {
-            (self::resolveClass($middleware))->run($this->request);
-        }
-
-        return $this;
-    }
-
-    function callController()
-    {
-        $controller = $this->controller;
-
-        if ($controller instanceof \Closure) {
-            return $controller($this->request, new HttpResponse());
-        }
-
-        $controller = self::resolveClass($controller);
-        $action = $this->action;
-
-        return $controller->$action($this->request, new HttpResponse());
-    }
-
-    static function resolveClass(string $name)
-    {
-        $class = str_replace('/\\\/', '\\', $name);
-        return new $class();
     }
 }
