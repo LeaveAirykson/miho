@@ -10,8 +10,7 @@ class AuthController
 {
     public function login(HttpRequest $req, HttpResponse $res)
     {
-        $vars = $req->getVariables();
-        $authData = User::login($vars->email, $vars->password);
+        $authData = User::login($req->getParam('email'), $req->getParam('password'));
 
         return $res->json($authData);
     }

@@ -12,6 +12,7 @@ require_once __DIR__ . '/../../bootstrap/boot.php';
 $app = new App\Core\App();
 
 // $app->route('POST', '/login', 'AuthController::login');
+$app->post('/login', [AuthController::class, 'login'], []);
 $app->get('/', TestController::class, [AuthGuard::class]);
 $app->get('/testdoc', [TestController::class, 'testdoc']);
 $app->get('/builddoc', [TestController::class, 'builddoc']);

@@ -2,16 +2,16 @@
 
 namespace App\Middleware;
 
-use App\Core\Request\HttpRequest;
 use App\Core\Route\Middleware;
+use App\Core\Route\Router;
 use App\Core\Utility\Logger;
 
 class AuthGuard extends Middleware
 {
-    public function run(HttpRequest &$req)
+    public function run(Router &$router)
     {
         Logger::log("Run AuthGuard::run()");
 
-        $req->setParam('testing', true);
+        $router->request->setParam('testing', true);
     }
 }
